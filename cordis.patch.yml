@@ -1,0 +1,18 @@
+# ============================================================================
+# dsh-iuno-widget-desktop —— DSH bundle patch（桌面端 profile）
+# ============================================================================
+# 这是插件的"挂载声明"。DSH 启动时按 bundle 层栈叠加各插件 patch，
+# 本文件把「尤诺」桌面端整站皮肤挂载进 desktop profile 的配置树。
+#
+# 安装（桌面端 profile 由 Electron 应用独占管理，必须用应用自带的 CLI）：
+#   "C:\...\DeepSeek Harness.exe"（ELECTRON_RUN_AS_NODE=1）
+#     <安装目录>\resources\app.asar\dsh\node_modules\@deepseek-ai\dsh-desktop-host\lib\cli.js
+#     plugin --profile desktop add link:<本包绝对路径>
+#   或在本应用里让 Agent 调用 plugin_manager（install_bundle，target = link:<本包绝对路径>）。
+#
+# 注意：这里必须写包名（bundle 插件名），不要写 ./xxx.mjs?v=N 之类的手工热更路径。
+# ============================================================================
+
+- insert:
+    - id: dsh-iuno-widget-desktop
+      name: dsh-iuno-widget-desktop

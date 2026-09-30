@@ -1,0 +1,30 @@
+{
+  "name": "dsh-iuno-widget-desktop",
+  "version": "1.1.2",
+  "description": "DeepSeek Harness 桌面端（Electron）尤诺整站皮肤 —— 结构化注入行适配 dsh-app:// 渲染器，壁纸 / 金色发丝线 / 桌宠 / 鼠标流光",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek-harness-desktop",
+    "desktop",
+    "electron",
+    "theme",
+    "skin",
+    "iuno"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "files": [
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}
