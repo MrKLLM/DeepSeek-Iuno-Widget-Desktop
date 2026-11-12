@@ -911,6 +911,10 @@ html body:not([data-ds-dark-theme]) #yn-settings .yn-settings-btn:hover {
   background: #05080f;
 }
 
+#yn-slider-preview[data-kind="ui"] {
+  background: transparent;
+}
+
 #yn-slider-preview .yn-bg-preview-media,
 #yn-slider-preview .yn-bg-preview-video {
   position: absolute;
@@ -942,10 +946,15 @@ html body:not([data-ds-dark-theme]) #yn-settings .yn-settings-btn:hover {
   pointer-events: none;
 }
 
-html[data-yn-slider-preview] #root,
-html[data-yn-slider-preview] #yn-settings,
-html[data-yn-slider-preview] .yn-pet,
-html[data-yn-slider-preview] .yn-trail {
+html[data-yn-slider-preview="bg"] #root,
+html[data-yn-slider-preview="bg"] #yn-settings,
+html[data-yn-slider-preview="bg"] .yn-pet,
+html[data-yn-slider-preview="bg"] .yn-trail {
+  opacity: 0 !important;
+  transition: opacity 0.12s ease;
+}
+
+html[data-yn-slider-preview="ui"] #yn-settings {
   opacity: 0 !important;
   transition: opacity 0.12s ease;
 }

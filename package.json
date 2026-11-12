@@ -1,6 +1,6 @@
 {
   "name": "dsh-iuno-widget-desktop",
-  "version": "1.22.0",
+  "version": "1.23.0",
   "description": "DeepSeek Harness 桌面端（Electron）尤诺整站皮肤 —— 静态壁纸 / 侧栏「尤诺主题」设置页 / 开场欢迎字 + 首帧线稿横向扫描 + 水纹粒子 / 抽卡片尾循环壁纸 / 金色发丝线 / 桌宠 / 鼠标流光",
   "keywords": [
     "dsh",
