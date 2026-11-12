@@ -24,8 +24,8 @@ function makeCtx({ account } = {}) {
     webServer: {
       register(route) {
         assert.equal(routes.has(route.path), false, 'duplicate route ' + route.path)
+        assert.ok(route.kind === 'exact' || route.kind === 'prefix', 'unexpected route kind ' + route.kind)
         routes.set(route.path, route)
-        if (route.kind !== 'exact') throw new Error('expected exact route')
         return () => routes.delete(route.path)
       },
     },
@@ -85,33 +85,46 @@ assert.deepEqual(mod.inject, ['webServer', 'credentials'])
 
   const expected = [
     '/dsh-iuno/wall.jpg', '/dsh-iuno/pet.png', '/dsh-iuno/size.json', '/dsh-iuno/balance.json',
-    '/dsh-iuno/theme.css', '/dsh-iuno/pet.css', '/dsh-iuno/desktop.css',
-    '/dsh-iuno/theme.js', '/dsh-iuno/pet.js', '/dsh-iuno/trail.js',
+    '/dsh-iuno/theme.css', '/dsh-iuno/pet.css', '/dsh-iuno/desktop.css', '/dsh-iuno/intro.css',
+    '/dsh-iuno/intro-moon.css', '/dsh-iuno/theme-settings.css',
+    '/dsh-iuno/theme.js', '/dsh-iuno/pet.js', '/dsh-iuno/trail.js', '/dsh-iuno/intro-moon.js',
+    '/dsh-iuno/intro.js', '/dsh-iuno/theme-settings.js',
+    '/dsh-iuno/intro', '/dsh-iuno/bg',
   ]
   for (const p of expected) assert.ok(routes.has(p), 'missing route ' + p)
-  ok('注册 ' + routes.size + ' 条精确路由')
+  assert.equal(routes.get('/dsh-iuno/intro').kind, 'prefix')
+  assert.equal(routes.get('/dsh-iuno/bg').kind, 'prefix')
+  ok('注册 ' + routes.size + ' 条路由（含 intro / bg 两条前缀）')
 
   // 注入行：模拟宿主 collectIndexInjections() 的 emit
   const table = []
   for (const fn of listeners.get('webserver/index-inject') || []) fn(table)
   const kinds = table.map((r) => r.kind)
-  assert.deepEqual(kinds, ['html', 'html', 'html', 'script', 'script-src', 'script-src', 'script-src'])
+  assert.deepEqual(kinds, ['html', 'html', 'html', 'html', 'html', 'html', 'script', 'script-src', 'script-src', 'script-src', 'script-src', 'script-src', 'script-src'])
   assert.match(table[0].html, /^<style id="yn-skin-css-theme">/)
   assert.match(table[0].html, /--yn-gold/)
   assert.match(table[2].html, /^<style id="yn-skin-css-desktop">/)
+  assert.match(table[3].html, /^<style id="yn-skin-css-intro">/)
+  assert.match(table[3].html, /#yn-intro/)
+  assert.match(table[4].html, /^<style id="yn-skin-css-intro-moon">/)
+  assert.match(table[4].html, /yn-moon-canvas/)
+  assert.match(table[5].html, /^<style id="yn-skin-css-settings">/)
+  assert.match(table[5].html, /#yn-settings/)
   // 回归保护：皮肤图层一律不得声明 -webkit-app-region。
   // 壁纸层是 position:fixed; inset:0，一旦声明 no-drag，Chromium 会把这整条
   // 原生拖拽条从可拖拽区里减掉 —— 窗口就再也拖不动了（v1.0.0 的 bug）。
   const desktopCss = String(table[2].html).replace(/\/\*[\s\S]*?\*\//g, '')
   assert.doesNotMatch(desktopCss, /-webkit-app-region/)
+  assert.doesNotMatch(String(table[4].html), /-webkit-app-region/)
   assert.match(desktopCss, /data-windows-titlebar/)
   assert.equal(table[0].placement, 'head')
-  for (const i of [1, 2]) assert.equal(table[i].placement, 'head')
-  assert.match(table[3].text, /dsh-iuno\/theme\.css/)
-  assert.deepEqual(table.slice(4).map((r) => r.src), [
+  for (const i of [1, 2, 3, 4, 5]) assert.equal(table[i].placement, 'head')
+  assert.match(table[6].text, /dsh-iuno\/theme\.css/)
+  assert.deepEqual(table.slice(7).map((r) => r.src), [
     '/dsh-iuno/theme.js', '/dsh-iuno/pet.js', '/dsh-iuno/trail.js',
+    '/dsh-iuno/intro-moon.js', '/dsh-iuno/intro.js', '/dsh-iuno/theme-settings.js',
   ])
-  ok('注入行 ' + table.length + ' 条（3 内联 style + 1 刷新器 + 3 script-src）')
+  ok('注入行 ' + table.length + ' 条（6 内联 style + 1 刷新器 + 6 script-src；入场默认关闭、无首帧遮罩行）')
 
   async function get(p) {
     const res = fakeRes()
@@ -142,13 +155,77 @@ assert.deepEqual(mod.inject, ['webServer', 'credentials'])
   assert.match(String(js.body), /重启 DeepSeek Harness/)
   ok('pet.js 路由（桌面端文案已替换）')
 
+  // 入场影片 / 海报：前缀路由只下发白名单文件名，穿越路径必须 404
+  const introRoute = routes.get('/dsh-iuno/intro')
+  const badIntro = fakeRes()
+  await introRoute.handler(fakeReq('GET', '/dsh-iuno/intro/../package.json'), badIntro)
+  assert.equal(badIntro.status, 404)
+  const introAssetDir = path.join(PKG, 'assets', 'intro')
+  const pvVideo = path.join(introAssetDir, 'pv.mp4')
+  const pvPoster = path.join(introAssetDir, 'pv-poster.jpg')
+  if (fs.existsSync(pvVideo) && fs.existsSync(pvPoster)) {
+    const vres = fakeRes()
+    await introRoute.handler(fakeReq('GET', '/dsh-iuno/intro/pv.mp4'), vres)
+    assert.equal(vres.status, 200)
+    assert.equal(vres.headers['Content-Type'], 'video/mp4')
+    assert.equal(vres.headers['Accept-Ranges'], 'bytes')
+    const ptotal = fs.statSync(pvVideo).size
+    assert.equal(vres.body.length, ptotal)
+    const rres = fakeRes()
+    await introRoute.handler(fakeReq('GET', '/dsh-iuno/intro/pv.mp4', undefined, { range: 'bytes=0-99' }), rres)
+    assert.equal(rres.status, 206)
+    assert.equal(rres.headers['Content-Range'], 'bytes 0-99/' + ptotal)
+    assert.equal(rres.body.length, 100)
+    ok('入场影片路由（200 / Range 206，白名单防穿越）', ptotal + ' 字节')
+  } else {
+    ok('入场影片路由（素材未就绪，跳过 200 断言）')
+  }
+
+  // 动态壁纸：前缀路由只下发白名单文件名
+  const bgRoute = routes.get('/dsh-iuno/bg')
+  const badBg = fakeRes()
+  await bgRoute.handler(fakeReq('GET', '/dsh-iuno/bg/../package.json'), badBg)
+  assert.equal(badBg.status, 404)
+  const loopPath = path.join(PKG, 'assets', 'bg', 'loop.mp4')
+  if (fs.existsSync(loopPath)) {
+    const hres = fakeRes()
+    await bgRoute.handler(fakeReq('HEAD', '/dsh-iuno/bg/loop.mp4'), hres)
+    assert.equal(hres.status, 200)
+    assert.equal(hres.headers['Content-Type'], 'video/mp4')
+    assert.equal(hres.headers['Content-Length'], String(fs.statSync(loopPath).size))
+    ok('动态壁纸路由（HEAD 200 / 白名单防穿越）', fs.statSync(loopPath).size + ' 字节')
+  } else {
+    ok('动态壁纸路由（素材未就绪，跳过 200 断言）')
+  }
+
+  // 入场影片路由已在上面验证；v1.8 的粒子月亮不依赖额外 JSON 资产。
+  ok('开场粒子月亮（内置 canvas，无额外路由资产）')
+
   const size = await get('/dsh-iuno/size.json')
   assert.equal(size.status, 200)
   const sizeJson = JSON.parse(String(size.body))
   assert.equal(sizeJson.profile, 'desktop')
   assert.equal(sizeJson.ambience, 1)
   assert.equal(sizeJson.wallBrightness, 0.86)
-  ok('size.json 默认值', JSON.stringify(sizeJson))
+  assert.equal(sizeJson.introEnabled, false)
+  assert.equal(sizeJson.introMode, 'every')
+  assert.equal(sizeJson.introVideo, 'pv')
+  assert.ok(Array.isArray(sizeJson.introPresets))
+  assert.deepEqual(sizeJson.introPresets.map((p) => p.id), ['pv', 'gacha', 'gacha-short'])
+  assert.equal(typeof sizeJson.introVolume, 'number')
+  assert.equal(sizeJson.introVolume, 0)
+  assert.equal(typeof sizeJson.moonIntroEnabled, 'boolean')
+  assert.equal(typeof sizeJson.loopWallpaperEnabled, 'boolean')
+  assert.equal(sizeJson.bgMode, 'image')
+  assert.equal(typeof sizeJson.veilLight, 'number')
+  assert.equal(typeof sizeJson.veilDark, 'number')
+  assert.equal(typeof sizeJson.uiAlpha, 'number')
+  assert.equal(typeof sizeJson.motion, 'number')
+  assert.ok(sizeJson.bgVideos && sizeJson.bgVideos.loop)
+  ok('size.json 默认值（入场默认关闭 + 4 预设 + 音量/片尾/背景参数）', JSON.stringify({
+    introEnabled: sizeJson.introEnabled, introVideo: sizeJson.introVideo, bgMode: sizeJson.bgMode,
+    introVolume: sizeJson.introVolume, moonIntro: sizeJson.moonIntroEnabled,
+  }))
 
   // 写配置：应落在桌面 profile 目录
   const res = fakeRes()
@@ -162,6 +239,53 @@ assert.deepEqual(mod.inject, ['webServer', 'credentials'])
   assert.ok(fs.existsSync(stateFile), 'state file not written to the desktop profile dir')
   assert.equal(JSON.parse(fs.readFileSync(stateFile, 'utf8')).wallBrightness, 0.62)
   ok('写配置落到 profiles/desktop/.dshy-size.json')
+
+  // 显示 / 背景 / 播放时机参数：同一接口白名单透传
+  const looks = fakeRes()
+  await routes.get('/dsh-iuno/size.json').handler(
+    fakeReq('POST', '/dsh-iuno/size.json', JSON.stringify({
+      veilLight: 0.05, veilDark: 0.3, uiAlpha: 0.8, wallDim: 0.1, wallBlur: 4,
+      motion: 0.5, bgMode: 'image', introMode: 'once',
+    }), { 'content-type': 'application/json' }),
+    looks,
+  )
+  assert.equal(looks.status, 200)
+  const looksParsed = JSON.parse(String(looks.body))
+  assert.equal(looksParsed.veilLight, 0.05)
+  assert.equal(looksParsed.veilDark, 0.3)
+  assert.equal(looksParsed.uiAlpha, 0.8)
+  assert.equal(looksParsed.wallDim, 0.1)
+  assert.equal(looksParsed.wallBlur, 4)
+  assert.equal(looksParsed.motion, 0.5)
+  assert.equal(looksParsed.bgMode, 'image')
+  assert.equal(looksParsed.introMode, 'once')
+  const looksAgain = JSON.parse(String((await get('/dsh-iuno/size.json')).body))
+  assert.equal(looksAgain.veilLight, 0.05)
+  assert.equal(looksAgain.bgMode, 'image')
+  assert.equal(looksAgain.introMode, 'once')
+  ok('显示 / 背景 / 播放时机参数落盘', JSON.stringify({ veilLight: looksAgain.veilLight, bgMode: looksAgain.bgMode, introMode: looksAgain.introMode }))
+
+  // 入场开关 / 影片选择：写回 size.json；开启后注入表多一条首帧遮罩行
+  const ires = fakeRes()
+  await routes.get('/dsh-iuno/size.json').handler(
+    fakeReq('POST', '/dsh-iuno/size.json', JSON.stringify({ introEnabled: true, introVideo: 'pv' }), { 'content-type': 'application/json' }),
+    ires,
+  )
+  assert.equal(ires.status, 200)
+  const introParsed = JSON.parse(String(ires.body))
+  assert.equal(introParsed.introEnabled, true)
+  assert.equal(introParsed.introVideo, 'pv')
+  const sizeAgain = JSON.parse(String((await get('/dsh-iuno/size.json')).body))
+  assert.equal(sizeAgain.introEnabled, true)
+  assert.equal(sizeAgain.introVideo, 'pv')
+  const { ctx: enabledCtx, listeners: enabledListeners } = makeCtx()
+  mod.apply(enabledCtx)
+  const enabledTable = []
+  for (const fn of enabledListeners.get('webserver/index-inject') || []) fn(enabledTable)
+  const bootRow = enabledTable.find((r) => r.kind === 'script' && /data-yn-intro/.test(String(r.text)))
+  assert.ok(bootRow, 'missing intro boot veil row after enabling intro')
+  assert.match(String(bootRow.text), /data-yn-intro/)
+  ok('入场开关落盘 + 开启后下发首帧遮罩行')
 
   // 上传壁纸 + 复位
   const up = fakeRes()

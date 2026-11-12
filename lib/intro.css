@@ -1,0 +1,245 @@
+/* ============================================================================
+ * 尤诺主题 · 入场动画样式（v1.0）
+ * ----------------------------------------------------------------------------
+ * 分两部分：
+ *   A. 首帧遮罩 —— 由注入行里的内联 script 给 <html> 打 data-yn-intro="boot"，
+ *      宿主在入场开启时才下发这段；用来盖住 DSH 原生加载页的亮底，防白闪。
+ *   B. #yn-intro 全屏播放层 —— 深空底 / 壁纸克隆 / 影片 / 海报 / 跳过 / 进度线。
+ *      播完或跳过时先把壁纸克隆层（wall + tint）淡入，再整层淡出：
+ *      克隆与真实背景同源同参数，所以揭幕不跳色、不跳构图。
+ *
+ * 约定：
+ *   - 图层绝不写 -webkit-app-region（会把原生拖拽条从可拖拽区减掉）。
+ *   - z-index 阶梯：星尘 2147483000 < 入场层 2147483300。
+ *   - Windows 顶部 40px 原生标题栏按钮盖不住，属预期边界。
+ * ==========================================================================*/
+
+/* ── A. 首帧遮罩（boot 态）────────────────────────────────────────────────── */
+html[data-yn-intro="boot"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483200;
+  background: #04070e;
+}
+
+html[data-yn-intro="boot"] body {
+  background-color: #04070e !important;
+}
+
+html[data-yn-intro="boot"] [data-dsh-boot] {
+  background: #04070e !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-yn-intro="boot"] [data-dsh-boot] > * {
+  opacity: 0 !important;
+}
+
+/* 入场期间让星尘静默，结束后自动淡回（.yn-skin-veil 自带 transition） */
+html[data-yn-intro] .yn-skin-veil {
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+/* ── B. 播放层 ─────────────────────────────────────────────────────────────── */
+#yn-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483300;
+  overflow: hidden;
+  background: #04070e;
+  opacity: 1;
+  transition: opacity 0.55s ease;
+  contain: layout paint;
+}
+
+#yn-intro.is-out {
+  opacity: 0;
+}
+
+#yn-intro .yn-intro-wall,
+#yn-intro .yn-intro-tint,
+#yn-intro .yn-intro-video,
+#yn-intro .yn-intro-poster,
+#yn-intro .yn-intro-vignette {
+  position: absolute;
+  inset: 0;
+}
+
+/* 壁纸克隆层：与 lib/theme.css 的 .yn-skin-wall 同源同参数（cover + 58% 26% + 亮度变量） */
+#yn-intro .yn-intro-wall {
+  background-color: #05080f;
+  background-image: url("/dsh-iuno/wall.jpg");
+  background-size: cover;
+  background-position: 58% 26%;
+  background-repeat: no-repeat;
+  filter: brightness(var(--yn-wall-brightness, 0.86));
+  opacity: 0;
+  transform: scale(1.1);
+  transition: opacity 0.95s ease, transform 1.4s cubic-bezier(0.22, 0.8, 0.28, 1);
+}
+
+/* 场景轻纱：与 .frame 的真实底色一致（浅色 0.20 / 深色 0.42），交接后无跳色 */
+#yn-intro .yn-intro-tint {
+  opacity: 0;
+  transition: opacity 0.95s ease;
+}
+
+#yn-intro .yn-intro-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  background: #04070e;
+}
+
+/* 海报：影片 canplay 之前先顶着，避免黑屏；就绪后淡出 */
+#yn-intro .yn-intro-poster {
+  background-color: #04070e;
+  background-size: cover;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+#yn-intro.is-video-ready .yn-intro-video {
+  opacity: 1;
+}
+
+#yn-intro.is-video-ready .yn-intro-poster {
+  opacity: 0;
+}
+
+#yn-intro .yn-intro-vignette {
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 52%, rgba(2, 4, 10, 0.5) 100%);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 1s ease;
+}
+
+/* 片尾粒子溶解层（canvas，由 intro.js 逐帧画） */
+#yn-intro .yn-intro-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+#yn-intro .yn-intro-skip {
+  position: absolute;
+  right: 22px;
+  bottom: 26px;
+  z-index: 3;
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 0.5px solid rgba(232, 205, 138, 0.38);
+  background: rgba(4, 7, 14, 0.42);
+  color: rgba(234, 242, 255, 0.86);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, border-color 0.2s ease, background 0.2s ease;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+#yn-intro .yn-intro-skip.is-on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#yn-intro .yn-intro-skip:hover {
+  border-color: rgba(240, 207, 138, 0.75);
+  background: rgba(10, 16, 28, 0.62);
+  color: #ffeec2;
+}
+
+/* 1px 金色进度线（不是进度条，只做「还剩多少」的暗示） */
+#yn-intro .yn-intro-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  z-index: 3;
+}
+
+#yn-intro .yn-intro-bar > i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, rgba(232, 205, 138, 0.15), rgba(232, 205, 138, 0.7));
+  transition: width 0.2s linear;
+}
+
+/* 交接：影片淡出，壁纸 + 轻纱克隆层淡入并回到真实取景（轻微镜头拉远） */
+#yn-intro.is-handoff .yn-intro-video {
+  opacity: 0;
+  transition: opacity 0.85s ease;
+}
+
+#yn-intro.is-handoff .yn-intro-vignette {
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+
+#yn-intro.is-handoff .yn-intro-wall {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#yn-intro.is-handoff .yn-intro-tint {
+  opacity: 1;
+}
+
+#yn-intro.is-handoff .yn-intro-skip,
+#yn-intro.is-handoff .yn-intro-bar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 自然播完、且有动态壁纸时：直接淡出整层，露出下面正在播放的 loop 背景。 */
+#yn-intro.is-live-handoff {
+  transition: opacity 0.95s ease;
+}
+
+#yn-intro.is-live-handoff .yn-intro-video {
+  transition: none;
+}
+
+#yn-intro.is-live-handoff .yn-intro-vignette {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+#yn-intro.is-live-handoff .yn-intro-skip,
+#yn-intro.is-live-handoff .yn-intro-bar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 减弱动效：不使用过渡/缩放，保留极短淡出即可 */
+@media (prefers-reduced-motion: reduce) {
+  #yn-intro,
+  #yn-intro .yn-intro-wall,
+  #yn-intro .yn-intro-tint,
+  #yn-intro .yn-intro-video,
+  #yn-intro .yn-intro-poster,
+  #yn-intro .yn-intro-vignette,
+  #yn-intro .yn-intro-skip,
+  #yn-intro .yn-intro-bar > i {
+    transition: none !important;
+  }
+  #yn-intro .yn-intro-wall {
+    transform: none;
+  }
+}

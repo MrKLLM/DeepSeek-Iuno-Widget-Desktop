@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-11-08T21:25+08:00",
+  "host": "临时 DSH 0.2.2 主机（Electron 同款引导：boot-host.mjs，临时 DSH_HOME + 最小 desktop profile）",
+  "title": "DeepSeek Harness",
+  "moduleLoaderMode": "live",
+  "mountHookType": "function",
+  "boot": { "hasEntry": true },
+  "rowFound": true,
+  "rowLabel": "尤诺主题",
+  "rowHtml": "<button type=\"button\" class=\"wtg9ga_panelRow\" aria-label=\"尤诺主题\"><span class=\"wtg9ga_panelGlyph\" aria-hidden=\"true\"><div data-slot=\"sidebar.panellist\" style=\"display: contents;\"><svg class=\"yn-moon-glyph\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" ...><path d=\"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z\" stroke=\"currentColor\" stroke-width=\"1.1\" ...></path></svg></div></span></button>",
+  "glyphClass": "yn-moon-glyph",
+  "glyphPath": { "stroke": "currentColor", "width": "1.1", "d": "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" },
+  "clickError": null,
+  "hostFound": true,
+  "hostRect": { "width": 1618, "height": 1046 },
+  "settingsRootFound": true,
+  "settingsPageMode": true,
+  "settingsHidden": false,
+  "settingsParentClass": "yn-settings-page-host",
+  "settingsText": "尤诺主题 · 设置 月光与玻璃的细部调整 · 改动即时生效 启动动画 背景 显示 关于 …",
+  "missingText": false,
+  "activePanelAttr": true,
+  "cleanup": {
+    "hostGone": true,
+    "rootStillThere": true,
+    "pageClassAfter": false,
+    "hiddenAfter": true,
+    "parentClassAfter": "BODY"
+  },
+  "bodyHasModuleError": false
+}

@@ -230,7 +230,12 @@
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
-.yn-pet-timbre:hover { border-color: rgba(157, 192, 255, 0.65); color: #eaf2ff; }
+.yn-pet-timbre:not(:disabled):hover { border-color: rgba(157, 192, 255, 0.65); color: #eaf2ff; }
+/* 未就绪的影片选项（抽卡 / 动态定格，素材处理中）：不可点、明显弱化 */
+.yn-pet-timbre:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 .yn-pet-timbre--on {
   background: rgba(70, 112, 214, 0.4);
   border-color: rgba(157, 192, 255, 0.85);
@@ -299,6 +304,30 @@
 }
 .yn-pet-wall-btn:hover { border-color: rgba(240, 207, 138, 0.85); color: #ffeec2; background: rgba(240, 207, 138, 0.10); }
 
+/* 入场动画设置区：开关 / 影片三选一 / 重播 / 一行小提示 */
+.yn-pet-panel-intro {
+  border-top: 0.5px solid rgba(232, 205, 138, 0.2);
+  margin-top: 2px;
+}
+.yn-pet-intro-videos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px;
+}
+/* 三个影片选项要挤进一行，字号与内边距缩一档（基础样式仍沿用 .yn-pet-timbre） */
+.yn-pet-intro-videos .yn-pet-timbre {
+  font-size: 10px;
+  padding: 2px 5px;
+}
+.yn-pet-panel-hint {
+  padding-top: 1px;
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: rgba(190, 216, 255, 0.45);
+}
+
 /* 亮色下把气泡和面板换成浅底深字 */
 html body:not([data-ds-dark-theme]) .yn-pet-say {
   background: rgba(255, 255, 255, 0.96);
@@ -318,6 +347,11 @@ html body:not([data-ds-dark-theme]) .yn-pet-slider::-moz-range-thumb { backgroun
 html body:not([data-ds-dark-theme]) .yn-pet-slider-val { color: rgba(51, 80, 159, 0.8); }
 html body:not([data-ds-dark-theme]) .yn-pet-wall-btn { color: rgba(107, 82, 32, 0.85); border-color: rgba(176, 138, 62, 0.45); }
 html body:not([data-ds-dark-theme]) .yn-pet-wall-btn:hover { color: #6b5220; background: rgba(176, 138, 62, 0.12); border-color: rgba(176, 138, 62, 0.7); }
+/* 浅色下 .yn-pet-timbre（音色 / 待机 / 影片共用）的默认色是月白，白底几乎看不见，统一换深蓝 */
+html body:not([data-ds-dark-theme]) .yn-pet-timbre { border-color: rgba(70, 112, 214, 0.28); color: rgba(51, 80, 159, 0.8); }
+html body:not([data-ds-dark-theme]) .yn-pet-timbre:not(:disabled):hover { border-color: rgba(70, 112, 214, 0.6); color: #2b4a9e; }
+html body:not([data-ds-dark-theme]) .yn-pet-timbre--on { background: rgba(70, 112, 214, 0.16); border-color: rgba(70, 112, 214, 0.75); color: #2b4a9e; }
+html body:not([data-ds-dark-theme]) .yn-pet-panel-hint { color: rgba(51, 80, 159, 0.55); }
 html body:not([data-ds-dark-theme]) .yn-pet-balance-tip {
   background: rgba(255, 255, 255, 0.97);
   border-color: rgba(176, 138, 62, 0.5);

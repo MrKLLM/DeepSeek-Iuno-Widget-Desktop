@@ -1,0 +1,951 @@
+/* ============================================================================
+ * 尤诺主题 · 设置大面板（theme-settings.css）
+ * ----------------------------------------------------------------------------
+ * 与插件其余皮肤同一套语言：细金发丝线 + 月白玻璃，克制、留白。
+ * 结构：全屏遮罩 + 居中玻璃卡片（左栏 tab、右栏内容、底部状态行）。
+ * 图层：z-index 2147483100 —— 星尘 2147483000 之上、入场层 2147483300 之下。
+ *
+ * 深浅色：变量默认按深色写；文件末尾用
+ *   html body:not([data-ds-dark-theme]) #yn-settings
+ * 覆盖成月白（浅色）配色，元件只引用变量，不各自写死颜色。
+ *
+ * 约定：所有选择器都以 #yn-settings / .yn-settings- 前缀，不碰 DSH 自己的类名；
+ *       图层不写窗口拖拽区声明（会吃掉原生拖拽条）。
+ * ==========================================================================*/
+
+#yn-settings {
+  /* ── 深色（默认）配色 ─────────────────────────────────────────────────── */
+  --ys-gold: #e8cd8a;
+  --ys-gold-strong: #f0cf8a;
+  --ys-gold-soft: rgba(232, 205, 138, 0.55);
+  --ys-eyebrow: rgba(232, 205, 138, 0.62);
+  --ys-hair: rgba(232, 205, 138, 0.24);
+  --ys-hair-strong: rgba(232, 205, 138, 0.48);
+  --ys-line: rgba(232, 205, 138, 0.14);
+  --ys-hover: rgba(232, 205, 138, 0.08);
+  --ys-sunken: rgba(157, 192, 255, 0.06);
+  --ys-track: rgba(157, 192, 255, 0.22);
+  --ys-text: #eaf2ff;
+  --ys-text-dim: rgba(220, 235, 255, 0.72);
+  --ys-text-faint: rgba(190, 216, 255, 0.48);
+  --ys-warn: #e9b98a;
+  --ys-ok: rgba(232, 205, 138, 0.9);
+  --ys-active-bg: linear-gradient(180deg, rgba(232, 205, 138, 0.20), rgba(232, 205, 138, 0.08));
+  --ys-active-border: rgba(232, 205, 138, 0.55);
+  --ys-active-text: #f5dc9e;
+  --ys-knob: #9fb3d6;
+  --ys-knob-on: #08122b;
+  --ys-switch-off: rgba(157, 192, 255, 0.12);
+  --ys-switch-on-a: rgba(232, 205, 138, 0.86);
+  --ys-switch-on-b: rgba(196, 158, 80, 0.82);
+  --ys-switch-glow: rgba(232, 205, 138, 0.42);
+  --ys-solid-a: rgba(240, 207, 138, 0.95);
+  --ys-solid-b: rgba(201, 164, 85, 0.9);
+  --ys-solid-edge: rgba(255, 238, 194, 0.8);
+  --ys-solid-text: #08122b;
+  --ys-solid-shadow: rgba(232, 205, 138, 0.45);
+  --ys-thumb-a: #fff8e2;
+  --ys-thumb-b: #e8cd8a;
+  --ys-thumb-edge: rgba(255, 240, 200, 0.9);
+  --ys-thumb-glow: rgba(232, 205, 138, 0.55);
+  --ys-scrollbar: rgba(232, 205, 138, 0.22);
+  --ys-card-bg:
+    radial-gradient(120% 90% at 100% 0%, rgba(122, 166, 245, 0.10), transparent 55%),
+    linear-gradient(160deg, rgba(14, 24, 50, 0.95), rgba(6, 11, 26, 0.97));
+  --ys-card-shadow:
+    0 30px 80px -32px rgba(0, 0, 0, 0.92),
+    0 0 0 1px rgba(232, 205, 138, 0.05) inset;
+  --ys-scrim-bg:
+    radial-gradient(100% 70% at 50% 0%, rgba(24, 42, 88, 0.38), transparent 62%),
+    rgba(3, 7, 16, 0.50);
+  --ys-foot-bg: rgba(3, 7, 16, 0.20);
+
+  position: fixed;
+  inset: 0;
+  z-index: 2147483100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 40px 32px;
+  color: var(--ys-text);
+  color-scheme: dark;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+
+#yn-settings[hidden] { display: none; }
+
+#yn-settings *,
+#yn-settings *::before,
+#yn-settings *::after { box-sizing: border-box; }
+
+#yn-settings button,
+#yn-settings input { font-family: inherit; }
+
+#yn-settings :focus-visible {
+  outline: 1px solid var(--ys-hair-strong);
+  outline-offset: 2px;
+}
+
+/* ── 遮罩 ────────────────────────────────────────────────────────────────── */
+#yn-settings .yn-settings-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--ys-scrim-bg);
+  -webkit-backdrop-filter: blur(7px) saturate(1.1);
+  backdrop-filter: blur(7px) saturate(1.1);
+}
+
+/* ── 卡片主体 ────────────────────────────────────────────────────────────── */
+#yn-settings .yn-settings-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 64px));
+  height: min(82vh, 780px);
+  min-height: min(430px, calc(100vh - 80px));
+  max-height: 82vh;
+  border-radius: 18px;
+  border: 0.5px solid var(--ys-hair);
+  background: var(--ys-card-bg);
+  box-shadow: var(--ys-card-shadow);
+  overflow: hidden;
+  outline: none;
+}
+
+#yn-settings .yn-settings-card:focus-visible { outline: none; }
+
+/* ── 头部 ────────────────────────────────────────────────────────────────── */
+#yn-settings .yn-settings-head {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex: none;
+  padding: 18px 22px 14px;
+  border-bottom: 0.5px solid var(--ys-line);
+}
+
+#yn-settings .yn-settings-heading { min-width: 0; }
+
+#yn-settings .yn-settings-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+  color: var(--ys-gold-strong);
+}
+
+/* 一枚极简的月牙：只用 1px 弧线，避免堆装饰 */
+#yn-settings .yn-settings-moon {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--ys-gold);
+  border-left-color: transparent;
+  transform: rotate(-24deg);
+  box-shadow: 2px 0 6px -3px var(--ys-gold-soft);
+}
+
+#yn-settings .yn-settings-sub {
+  margin: 5px 0 0;
+  font-size: 10.5px;
+  line-height: 1.6;
+  letter-spacing: 0.03em;
+  color: var(--ys-text-faint);
+}
+
+#yn-settings .yn-settings-close {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  border: 0.5px solid var(--ys-hair);
+  background: transparent;
+  color: var(--ys-text-dim);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+#yn-settings .yn-settings-close:hover {
+  color: var(--ys-gold-strong);
+  border-color: var(--ys-hair-strong);
+  background: var(--ys-hover);
+}
+
+/* ── 中部：左栏 tab + 右侧内容 ───────────────────────────────────────────── */
+#yn-settings .yn-settings-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+#yn-settings .yn-settings-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 0 0 150px;
+  width: 150px;
+  padding: 14px 10px 16px 14px;
+  border-right: 0.5px solid var(--ys-line);
+}
+
+#yn-settings .yn-settings-tab {
+  position: relative;
+  padding: 8px 12px;
+  border: 0.5px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ys-text-dim);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+#yn-settings .yn-settings-tab:hover {
+  color: var(--ys-text);
+  background: var(--ys-hover);
+}
+
+#yn-settings .yn-settings-tab[aria-selected='true'] {
+  color: var(--ys-gold-strong);
+  background: var(--ys-active-bg);
+  border-color: var(--ys-active-border);
+}
+
+/* 选中项左侧一缕金发丝（1px 级，不喧宾夺主） */
+#yn-settings .yn-settings-tab[aria-selected='true']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
+  height: 14px;
+  border-radius: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, var(--ys-gold-strong), transparent);
+}
+
+#yn-settings .yn-settings-pages {
+  flex: 1;
+  min-width: 0;
+  padding: 18px 22px 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ys-scrollbar) transparent;
+}
+
+#yn-settings .yn-settings-pages::-webkit-scrollbar { width: 8px; }
+#yn-settings .yn-settings-pages::-webkit-scrollbar-track { background: transparent; }
+#yn-settings .yn-settings-pages::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: var(--ys-scrollbar);
+  background-clip: content-box;
+}
+
+#yn-settings .yn-settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+#yn-settings .yn-settings-page[hidden] { display: none; }
+
+/* ── 内容分区 ────────────────────────────────────────────────────────────── */
+#yn-settings .yn-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#yn-settings .yn-settings-group + .yn-settings-group {
+  padding-top: 18px;
+  border-top: 0.5px solid var(--ys-line);
+}
+
+#yn-settings .yn-settings-group-title {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--ys-eyebrow);
+}
+
+#yn-settings .yn-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+#yn-settings .yn-settings-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+#yn-settings .yn-settings-label {
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--ys-text);
+}
+
+#yn-settings .yn-settings-desc {
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--ys-text-faint);
+}
+
+#yn-settings .yn-settings-hint {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  color: var(--ys-text-faint);
+}
+
+#yn-settings .yn-settings-inline-value {
+  flex: none;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ys-gold-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 开关 ────────────────────────────────────────────────────────────────── */
+#yn-settings .yn-settings-switch {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 21px;
+  padding: 0;
+  border-radius: 999px;
+  border: 0.5px solid var(--ys-hair-strong);
+  background: var(--ys-switch-off);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#yn-settings .yn-settings-switch i {
+  position: absolute;
+  top: 2.5px;
+  left: 2.5px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--ys-knob);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.18s ease;
+}
+
+#yn-settings .yn-settings-switch[aria-checked='true'] {
+  background: linear-gradient(90deg, var(--ys-switch-on-a), var(--ys-switch-on-b));
+  border-color: var(--ys-switch-on-a);
+  box-shadow: 0 0 12px -3px var(--ys-switch-glow);
+}
+
+#yn-settings .yn-settings-switch[aria-checked='true'] i {
+  transform: translateX(16px);
+  background: var(--ys-knob-on);
+}
+
+/* ── 分段选择（播放时机 / 背景模式）────────────────────────────────────── */
+#yn-settings .yn-settings-seg {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 0.5px solid var(--ys-line);
+  background: var(--ys-sunken);
+}
+
+#yn-settings .yn-settings-seg-btn {
+  padding: 4px 11px;
+  border: 0.5px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ys-text-dim);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+#yn-settings .yn-settings-seg-btn:not(:disabled):hover { color: var(--ys-text); }
+
+#yn-settings .yn-settings-seg-btn[aria-pressed='true'] {
+  background: var(--ys-active-bg);
+  border-color: var(--ys-active-border);
+  color: var(--ys-active-text);
+}
+
+#yn-settings .yn-settings-seg-btn:disabled {
+  opacity: 0.36;
+  cursor: not-allowed;
+}
+
+/* ── 影片胶囊 ────────────────────────────────────────────────────────────── */
+#yn-settings .yn-settings-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#yn-settings .yn-settings-chip {
+  padding: 5px 13px;
+  border: 0.5px solid var(--ys-line);
+  border-radius: 999px;
+  background: var(--ys-sunken);
+  color: var(--ys-text-dim);
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+#yn-settings .yn-settings-chip:not(:disabled):hover {
+  color: var(--ys-text);
+  border-color: var(--ys-hair);
+  background: var(--ys-hover);
+}
+
+#yn-settings .yn-settings-chip[aria-pressed='true'] {
+  background: var(--ys-active-bg);
+  border-color: var(--ys-active-border);
+  color: var(--ys-active-text);
+}
+
+#yn-settings .yn-settings-chip:disabled {
+  opacity: 0.36;
+  cursor: not-allowed;
+}
+
+/* ── 按钮 ────────────────────────────────────────────────────────────────── */
+#yn-settings .yn-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#yn-settings .yn-settings-btn {
+  padding: 6px 16px;
+  border: 0.5px solid var(--ys-hair);
+  border-radius: 999px;
+  background: var(--ys-hover);
+  color: var(--ys-gold-strong);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease, filter 0.16s ease;
+}
+
+#yn-settings .yn-settings-btn:hover {
+  border-color: var(--ys-hair-strong);
+  background: rgba(232, 205, 138, 0.14);
+}
+
+#yn-settings .yn-settings-btn--solid {
+  border-color: var(--ys-solid-edge);
+  background: linear-gradient(180deg, var(--ys-solid-a), var(--ys-solid-b));
+  color: var(--ys-solid-text);
+  font-weight: 600;
+  box-shadow: 0 8px 20px -14px var(--ys-solid-shadow);
+}
+
+#yn-settings .yn-settings-btn--solid:hover {
+  background: linear-gradient(180deg, var(--ys-solid-a), var(--ys-solid-b));
+  border-color: var(--ys-solid-edge);
+  filter: brightness(1.06);
+}
+
+#yn-settings .yn-settings-btn--ghost {
+  background: transparent;
+  border-color: var(--ys-line);
+  color: var(--ys-text-dim);
+}
+
+#yn-settings .yn-settings-btn--ghost:hover {
+  border-color: var(--ys-hair);
+  background: var(--ys-hover);
+  color: var(--ys-text);
+}
+
+/* ── 滑块字段 ────────────────────────────────────────────────────────────── */
+#yn-settings .yn-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#yn-settings .yn-settings-field-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#yn-settings .yn-settings-field-label {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ys-text);
+}
+
+#yn-settings .yn-settings-field-val {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ys-gold-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+#yn-settings .yn-settings-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  margin: 2px 0;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+  background: linear-gradient(
+    90deg,
+    var(--ys-gold-soft) 0 var(--ys-fill, 0%),
+    var(--ys-track) var(--ys-fill, 0%) 100%
+  );
+}
+
+#yn-settings .yn-settings-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 0.5px solid var(--ys-thumb-edge);
+  background: radial-gradient(circle at 35% 30%, var(--ys-thumb-a), var(--ys-thumb-b) 72%);
+  box-shadow: 0 0 10px var(--ys-thumb-glow), 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+#yn-settings .yn-settings-range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 0.5px solid var(--ys-thumb-edge);
+  background: var(--ys-thumb-b);
+  box-shadow: 0 0 10px var(--ys-thumb-glow);
+}
+
+#yn-settings .yn-settings-range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+/* 文件选择器：真正藏在按钮后面 */
+#yn-settings .yn-settings-file { display: none; }
+
+/* ── 关于：键值行与徽章 ─────────────────────────────────────────────────── */
+#yn-settings .yn-settings-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  border: 0.5px solid var(--ys-hair);
+  border-radius: 999px;
+  background: var(--ys-hover);
+  color: var(--ys-gold-strong);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+#yn-settings .yn-settings-about-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#yn-settings .yn-settings-about-list li {
+  display: flex;
+  gap: 9px;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--ys-text-dim);
+}
+
+#yn-settings .yn-settings-about-list li::before {
+  content: '·';
+  flex: none;
+  color: var(--ys-gold-soft);
+}
+
+#yn-settings .yn-settings-about-list b {
+  font-weight: 600;
+  color: var(--ys-text);
+}
+
+/* ── 底部状态行 ──────────────────────────────────────────────────────────── */
+#yn-settings .yn-settings-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex: none;
+  padding: 9px 22px;
+  border-top: 0.5px solid var(--ys-line);
+  background: var(--ys-foot-bg);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  color: var(--ys-text-faint);
+}
+
+#yn-settings .yn-settings-status {
+  min-height: 1.5em;
+  transition: color 0.16s ease;
+}
+
+#yn-settings .yn-settings-status--warn { color: var(--ys-warn); }
+#yn-settings .yn-settings-status--ok { color: var(--ys-ok); }
+
+#yn-settings .yn-settings-foot-tip {
+  flex: none;
+  white-space: nowrap;
+  opacity: 0.72;
+}
+
+/* ── 进出场动画 ──────────────────────────────────────────────────────────── */
+@keyframes yn-settings-scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes yn-settings-card-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.986); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes yn-settings-page-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes yn-settings-scrim-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes yn-settings-card-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(8px) scale(0.99); }
+}
+
+#yn-settings[data-open='1'] .yn-settings-scrim {
+  animation: yn-settings-scrim-in 0.2s ease both;
+}
+
+#yn-settings[data-open='1'] .yn-settings-card {
+  animation: yn-settings-card-in 0.26s cubic-bezier(0.22, 0.8, 0.35, 1) both;
+}
+
+#yn-settings .yn-settings-page:not([hidden]) {
+  animation: yn-settings-page-in 0.2s ease both;
+}
+
+#yn-settings[data-closing='1'] .yn-settings-scrim {
+  animation: yn-settings-scrim-out 0.14s ease both;
+}
+
+#yn-settings[data-closing='1'] .yn-settings-card {
+  animation: yn-settings-card-out 0.14s ease both;
+}
+
+/* ── 浅色主题（月白）───────────────────────────────────────────────────── */
+html body:not([data-ds-dark-theme]) #yn-settings {
+  --ys-gold: #b08a3e;
+  --ys-gold-strong: #8a6a20;
+  --ys-gold-soft: rgba(176, 138, 62, 0.55);
+  --ys-eyebrow: rgba(150, 112, 40, 0.88);
+  --ys-hair: rgba(176, 138, 62, 0.34);
+  --ys-hair-strong: rgba(176, 138, 62, 0.58);
+  --ys-line: rgba(28, 44, 84, 0.10);
+  --ys-hover: rgba(176, 138, 62, 0.09);
+  --ys-sunken: rgba(28, 44, 84, 0.05);
+  --ys-track: rgba(70, 112, 214, 0.20);
+  --ys-text: #1d2a49;
+  --ys-text-dim: rgba(29, 42, 73, 0.72);
+  --ys-text-faint: rgba(29, 42, 73, 0.48);
+  --ys-warn: #9a6420;
+  --ys-ok: #6b5220;
+  --ys-active-bg: linear-gradient(180deg, rgba(176, 138, 62, 0.20), rgba(176, 138, 62, 0.09));
+  --ys-active-border: rgba(176, 138, 62, 0.55);
+  --ys-active-text: #6b5220;
+  --ys-knob: #8496bb;
+  --ys-knob-on: #ffffff;
+  --ys-switch-off: rgba(28, 44, 84, 0.08);
+  --ys-switch-on-a: rgba(201, 164, 85, 0.95);
+  --ys-switch-on-b: rgba(176, 138, 62, 0.92);
+  --ys-switch-glow: rgba(176, 138, 62, 0.35);
+  --ys-solid-a: #e2c477;
+  --ys-solid-b: #c9a455;
+  --ys-solid-edge: rgba(176, 138, 62, 0.55);
+  --ys-solid-text: #3a2c0e;
+  --ys-solid-shadow: rgba(176, 138, 62, 0.35);
+  --ys-thumb-a: #fffdf5;
+  --ys-thumb-b: #c9a455;
+  --ys-thumb-edge: rgba(176, 138, 62, 0.6);
+  --ys-thumb-glow: rgba(176, 138, 62, 0.35);
+  --ys-scrollbar: rgba(176, 138, 62, 0.30);
+  --ys-card-bg:
+    radial-gradient(120% 90% at 100% 0%, rgba(122, 166, 245, 0.14), transparent 55%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(243, 247, 255, 0.97));
+  --ys-card-shadow:
+    0 30px 70px -34px rgba(43, 63, 140, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  --ys-scrim-bg:
+    radial-gradient(90% 60% at 50% 0%, rgba(157, 192, 255, 0.20), transparent 62%),
+    rgba(226, 233, 246, 0.52);
+  --ys-foot-bg: rgba(255, 255, 255, 0.38);
+  color-scheme: light;
+}
+
+/* 浅色下 hover 的暖金底在纯白上略淡，稍稍补一点（保持克制） */
+html body:not([data-ds-dark-theme]) #yn-settings .yn-settings-btn:hover {
+  background: rgba(176, 138, 62, 0.14);
+}
+
+/* ── 窄屏：tab 栏改成横向、卡片留白收紧 ─────────────────────────────────── */
+@media (max-width: 640px) {
+  #yn-settings { padding: 20px 12px; }
+
+  #yn-settings .yn-settings-card {
+    width: calc(100vw - 24px);
+    height: min(88vh, 860px);
+    min-height: min(420px, calc(100vh - 40px));
+    border-radius: 15px;
+  }
+
+  #yn-settings .yn-settings-head { padding: 15px 16px 12px; }
+  #yn-settings .yn-settings-title { font-size: 15.5px; }
+
+  #yn-settings .yn-settings-main { flex-direction: column; }
+
+  #yn-settings .yn-settings-rail {
+    flex: 0 0 auto;
+    flex-direction: row;
+    width: auto;
+    padding: 8px 12px;
+    border-right: none;
+    border-bottom: 0.5px solid var(--ys-line);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #yn-settings .yn-settings-rail::-webkit-scrollbar { display: none; }
+
+  #yn-settings .yn-settings-tab {
+    padding: 6px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  #yn-settings .yn-settings-tab[aria-selected='true']::before { display: none; }
+
+  #yn-settings .yn-settings-pages { padding: 14px 16px 18px; }
+
+  #yn-settings .yn-settings-row { gap: 12px; }
+  #yn-settings .yn-settings-foot { padding: 8px 16px; }
+  #yn-settings .yn-settings-foot-tip { display: none; }
+}
+
+/* ── 超短窗口：卡片贴住上下留白，避免被 viewport 裁掉 ───────────────────── */
+@media (max-height: 560px) {
+  #yn-settings { padding: 12px 20px; }
+
+  #yn-settings .yn-settings-card {
+    height: calc(100vh - 24px);
+    min-height: 0;
+    max-height: calc(100vh - 24px);
+  }
+
+  #yn-settings .yn-settings-head { padding: 12px 18px 10px; }
+  #yn-settings .yn-settings-foot { padding: 6px 18px; }
+}
+
+/* ── 降低动效偏好 ────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #yn-settings .yn-settings-scrim,
+  #yn-settings .yn-settings-card,
+  #yn-settings .yn-settings-page:not([hidden]) {
+    animation: none !important;
+  }
+  #yn-settings button,
+  #yn-settings .yn-settings-switch,
+  #yn-settings .yn-settings-switch i {
+    transition: none;
+  }
+}
+
+/* ── 页面模式：侧栏「尤诺主题」入口把同一套面板挂到主区 ────────────────────
+ * client 插件在主区 main 槽渲染 .yn-settings-page-host，再调用
+ * window.__ynMountSettingsPage(host) 把 #yn-settings 搬进来。 */
+.yn-settings-page-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#yn-settings.yn-settings--page {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 18px 22px;
+  background: transparent;
+  overflow: hidden;
+}
+
+#yn-settings.yn-settings--page .yn-settings-scrim { display: none; }
+
+#yn-settings.yn-settings--page .yn-settings-card {
+  width: 100%;
+  max-width: 980px;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  border-radius: 14px;
+  border: 0.5px solid var(--ys-hair);
+  background: var(--ys-card-bg);
+  box-shadow: var(--ys-card-shadow);
+}
+
+#yn-settings.yn-settings--page .yn-settings-close { display: none; }
+#yn-settings.yn-settings--page .yn-settings-foot-tip { display: none; }
+#yn-settings.yn-settings--page .yn-settings-head { padding-top: 20px; }
+
+@media (max-width: 900px) {
+  #yn-settings.yn-settings--page { padding: 10px 12px; }
+  #yn-settings.yn-settings--page .yn-settings-card { border-radius: 10px; }
+}
+
+/* 全屏背景预览：只显示当前背景，点击返回 */
+#yn-bg-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483250;
+  cursor: zoom-out;
+  background: #05080f;
+  overflow: hidden;
+}
+
+#yn-bg-preview .yn-bg-preview-media {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: 58% 26%;
+  background-repeat: no-repeat;
+  filter: brightness(calc(var(--yn-wall-brightness, 0.86) * (1 - var(--yn-wall-dim, 0))))
+          blur(var(--yn-wall-blur, 0px));
+  transition: filter 0.25s ease;
+}
+
+#yn-bg-preview .yn-bg-preview-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 58% 26%;
+  filter: brightness(calc(var(--yn-wall-brightness, 0.86) * (1 - var(--yn-wall-dim, 0))))
+          blur(var(--yn-wall-blur, 0px));
+}
+
+#yn-bg-preview .yn-bg-preview-tip {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 0.5px solid rgba(232, 205, 138, 0.35);
+  background: rgba(4, 8, 16, 0.5);
+  color: rgba(244, 247, 255, 0.86);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}
+
+/* 拖动滑杆时：只显示背景 + 当前参数条，松开恢复 */
+#yn-slider-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483245;
+  overflow: hidden;
+  pointer-events: none;
+  background: #05080f;
+}
+
+#yn-slider-preview .yn-bg-preview-media,
+#yn-slider-preview .yn-bg-preview-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 58% 26%;
+  background-size: cover;
+  background-position: 58% 26%;
+  background-repeat: no-repeat;
+  filter: brightness(calc(var(--yn-wall-brightness, 0.86) * (1 - var(--yn-wall-dim, 0))))
+          blur(var(--yn-wall-blur, 0px));
+}
+
+#yn-slider-preview .yn-slider-preview-field {
+  position: fixed;
+  padding: 14px 18px 16px;
+  border-radius: 14px;
+  border: 0.5px solid rgba(232, 205, 138, 0.34);
+  background: rgba(7, 12, 24, 0.58);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  color: rgba(238, 244, 255, 0.92);
+}
+
+#yn-slider-preview .yn-slider-preview-field input[type="range"] {
+  pointer-events: none;
+}
+
+html[data-yn-slider-preview] #root,
+html[data-yn-slider-preview] #yn-settings,
+html[data-yn-slider-preview] .yn-pet,
+html[data-yn-slider-preview] .yn-trail {
+  opacity: 0 !important;
+  transition: opacity 0.12s ease;
+}

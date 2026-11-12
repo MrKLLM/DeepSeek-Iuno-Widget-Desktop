@@ -116,7 +116,7 @@ html body[data-ds-dark-theme] {
   --dsw-alias-button-info-hover: #f5dc9e;
 
   /* 关键：bg-base 半透明，让壁纸透出来 */
-  --dsw-alias-bg-base: rgba(6, 10, 23, 0.42);
+  --dsw-alias-bg-base: rgb(6 10 23 / calc(var(--yn-veil-dark, 0.28) * 0.70));
   --dsw-alias-bg-layer-1: rgba(9, 16, 36, 0.86);
   --dsw-alias-bg-layer-2: rgba(8, 15, 34, 0.90);
   --dsw-alias-bg-layer-3: rgba(7, 13, 30, 0.94);
@@ -182,7 +182,58 @@ html body:not([data-ds-dark-theme]) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   4. 壁纸层 —— 关键：不模糊、不压暗，让立绘清晰可辨
+   3.5 背景清透度 / 界面透明度（0.2.2 双层底色修正 + 可调轻纱）
+   ──────────────────────────────────────────────────────────────────────────
+   0.1.x 里壁纸之上只有布局 .frame 这一层底色；0.2.2 的 ui-theme 又给 body
+   直接铺了一层 --dsw-alias-bg-base（壁纸可见度 = 1-(1-αbody)(1-αframe)）。
+   这里去掉 body 那层，只保留 .frame 一层「轻纱」，并把透明度做成变量：
+
+     --yn-veil-light  浅色轻纱，默认 0.08（背景优先，清晰）
+     --yn-veil-dark   深色轻纱，默认 0.42
+     --yn-ui-alpha    侧栏 / 输入卡等玻璃面板的不透明度系数，默认 1
+
+   设置面板（theme-settings.js）会实时改这些变量并持久化到 size.json。
+   ══════════════════════════════════════════════════════════════════════════ */
+html body { background-color: transparent; }
+
+html body:not([data-ds-dark-theme]) [class*="_frame"] {
+  background-color: rgb(247 250 255 / calc(var(--yn-veil-light, 0.18) * 0.4 + 0.28));
+}
+
+html body[data-ds-dark-theme] [class*="_frame"] {
+  background-color: rgb(6 10 23 / calc(var(--yn-veil-dark, 0.28) * 0.55));
+}
+
+/* 会话区（centerCol）自己还有一层 --dsw-alias-bg-base 底色（浅色 0.58），
+   会在 .frame 之外再盖白一次 —— 只把会话区的这个 token 降到清透值，
+   菜单/弹层用的 --dsw-specific-menu 等不受影响，背景才能真正清晰。 */
+html body:not([data-ds-dark-theme]) [class*="_centerCol"] {
+  --dsw-alias-bg-base: rgb(247 250 255 / calc(var(--yn-veil-light, 0.18) * 0.4 + 0.26));
+}
+
+html body[data-ds-dark-theme] [class*="_centerCol"] {
+  --dsw-alias-bg-base: rgb(6 10 23 / calc(var(--yn-veil-dark, 0.28) * 0.55));
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   3.6 月白纸面（v1.19.0 / 2026-11-12）—— 浅色文字可读性的正解
+   ──────────────────────────────────────────────────────────────────────────
+   用户反馈「浅色下，字看着有点不舒服」。上一版（v17）试图**不铺任何层**、
+   只给每个字形加白色 text-shadow 光晕来保可读性 —— 结果字形边缘被白晕糊掉，
+   小字尤其"发虚"，这也是"不舒服"的直接来源。
+   这一版改成：浅色内容区（centerCol）铺一张**半透明月白纸**，文字落在纸上；
+   不再使用字形光晕。纸面不透明度由「浅色纸面」滑杆（--yn-veil-light）一起驱动：
+     0  → 纸面 0.42（壁纸仍透 58%，最"背景优先"）
+     40% → 纸面 0.62（最"文字优先"）
+   壁纸层自身的白纱同步从 0.26 降到 0.16 —— 可读性交给纸面，白纱只压花哨区域。
+   深色模式不变（白字 + 暗投影在深色纸上本来就成立）。
+   ══════════════════════════════════════════════════════════════════════════ */
+html body:not([data-ds-dark-theme]) [class*="_centerCol"] {
+  background-color: rgb(247 250 255 / calc(0.42 + var(--yn-veil-light, 0.08) * 0.50));
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   4. 壁纸层 —— 背景做主角：不压暗、不模糊（除非用设置面板调）
    ══════════════════════════════════════════════════════════════════════════ */
 .yn-skin-wall {
   position: fixed;
@@ -194,9 +245,61 @@ html body:not([data-ds-dark-theme]) {
   background-size: cover;
   background-position: 58% 26%;
   background-repeat: no-repeat;
-  /* 压暗程度由 --yn-wall-brightness 控制（默认 0.86），右键面板里可调 */
-  filter: brightness(var(--yn-wall-brightness, 0.86));
+  transform-origin: 58% 30%;
+  /* 亮度 + 额外压暗 + 模糊都由设置面板的变量驱动 */
+  filter: brightness(calc(var(--yn-wall-brightness, 0.86) * (1 - var(--yn-wall-dim, 0))))
+          blur(var(--yn-wall-blur, 0px));
+  transition: filter 0.3s ease;
 }
+
+/* 壁纸自身的可读性底纱：只改壁纸层，不覆盖任何 UI 文字。
+   浅色 v1.19 起降到 0.16：内容区的可读性由 3.6 的「月白纸面」负责，
+   白纱只压花哨区域，壁纸颜色得以保留。深色仍用暗纱托住白字。 */
+.yn-skin-wall::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(247, 250, 255, 0.16);
+}
+html body[data-ds-dark-theme] .yn-skin-wall::after {
+  background: rgba(3, 7, 14, 0.18);
+}
+
+/* 文字可读性：
+   · 浅色 —— **不再给字形加任何阴影**（v1.19）：白晕会把字边糊掉，正是
+     "浅色下字看着不舒服"的直接来源。文字落在 3.6 的月白纸面上，靠纸面而不是
+     光晕保证对比度。
+   · 深色 —— 保留暗投影，帮助白字压过壁纸亮部。 */
+html body[data-ds-dark-theme] [class*="_centerCol"] :is(h1,h2,h3,h4,p,span,div,li,button,a,label,strong,em) {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.72), 0 0 8px rgba(0, 0, 0, 0.48);
+}
+html body[data-ds-dark-theme] [class*="_sidebarCol"] :is(span,div,button,a,label) {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* 背景按用户要求固定为静态壁纸：不再有 loop 视频 / 呼吸微动效。
+   亮度、压暗、模糊仍由设置面板的 CSS 变量驱动。 */
+html[data-yn-settings] .yn-skin-stars { opacity: 0.08; }
+
+/* 抽卡长/短版的片尾循环壁纸：仅在该影片 + 入场开启时挂载 */
+.yn-skin-bgloop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 58% 26%;
+  pointer-events: none;
+  opacity: 0;
+  background: #05080f;
+  filter: brightness(calc(var(--yn-wall-brightness, 0.86) * (1 - var(--yn-wall-dim, 0))))
+          blur(var(--yn-wall-blur, 0px));
+  transition: opacity 0.85s ease, filter 0.3s ease;
+}
+
+.yn-skin-bgloop.is-on { opacity: 1; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    5. 侧边栏 —— 轻玻璃 + 一条细金线
@@ -204,11 +307,15 @@ html body:not([data-ds-dark-theme]) {
 html body [class*="_sidebarCol"] {
   /* 注意：这里不能加 backdrop-filter —— 它会成为 position:fixed 后代的包含块，
      DSH 的设置弹层/下拉菜单挂在侧栏里，一旦加就会错位。 */
-  background: linear-gradient(180deg, rgba(9, 16, 36, 0.74) 0%, rgba(7, 12, 30, 0.82) 100%);
+  background: linear-gradient(180deg,
+    rgb(9 16 36 / calc(0.74 * var(--yn-ui-alpha, 1))) 0%,
+    rgb(7 12 30 / calc(0.82 * var(--yn-ui-alpha, 1))) 100%);
   border-right: 0.5px solid var(--yn-hair);
 }
 html body:not([data-ds-dark-theme]) [class*="_sidebarCol"] {
-  background: linear-gradient(180deg, rgba(243, 246, 253, 0.86) 0%, rgba(238, 242, 252, 0.9) 100%);
+  background: linear-gradient(180deg,
+    rgb(243 246 253 / calc(0.86 * var(--yn-ui-alpha, 1))) 0%,
+    rgb(238 242 252 / calc(0.90 * var(--yn-ui-alpha, 1))) 100%);
   border-right-color: var(--yn-hair);
 }
 
@@ -344,7 +451,9 @@ html body [class*="_projectRow"]:hover {
    ══════════════════════════════════════════════════════════════════════════ */
 html body [class*="_composerStack"] [class*="_card"]:not([class*="Workspace"]):not([class*="Icon"]):not([class*="Content"]) {
   /* 同样不能加 backdrop-filter：输入卡里有 fixed 定位的模型/权限下拉 */
-  background: linear-gradient(180deg, rgba(12, 22, 50, 0.80) 0%, rgba(6, 12, 30, 0.86) 100%);
+  background: linear-gradient(180deg,
+    rgb(12 22 50 / calc(0.80 * var(--yn-ui-alpha, 1))) 0%,
+    rgb(6 12 30 / calc(0.86 * var(--yn-ui-alpha, 1))) 100%);
   border: none;
   box-shadow: inset 0 0 0 0.5px var(--yn-hair), 0 16px 40px -24px rgba(0, 0, 0, 0.7);
   transition: box-shadow 0.2s ease;
@@ -359,7 +468,9 @@ html body [class*="_composerStack"] [class*="_card"]:not([class*="Workspace"]):n
   50% { box-shadow: inset 0 0 0 0.5px rgba(255, 232, 180, 0.55), 0 0 28px -10px rgba(255, 214, 140, 0.5), 0 16px 40px -24px rgba(0, 0, 0, 0.7); }
 }
 html body:not([data-ds-dark-theme]) [class*="_composerStack"] [class*="_card"]:not([class*="Workspace"]):not([class*="Icon"]):not([class*="Content"]) {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 251, 255, 0.94) 100%);
+  background: linear-gradient(180deg,
+    rgb(255 255 255 / calc(0.90 * var(--yn-ui-alpha, 1))) 0%,
+    rgb(248 251 255 / calc(0.94 * var(--yn-ui-alpha, 1))) 100%);
 }
 
 /* 光标：金色 */

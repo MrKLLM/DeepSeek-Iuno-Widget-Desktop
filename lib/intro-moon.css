@@ -1,0 +1,83 @@
+/* 尤诺主题 · 开场「欢迎回来，空白」→ 首帧线稿横向扫描 → 淡入影片
+ * 画面：黑屏 → 欢迎字整体淡入/淡出 → 中间 1/3 区域线稿随一条横向扫描线从左到右
+ *       描出（金白线，只描轮廓）→ 线稿淡出、影片首帧淡入。
+ * 粒子：沿扫描带向左→右流动的水纹拖尾，不做区块式图像拟合。
+ */
+#yn-intro .yn-moon-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+#yn-intro .yn-moon-welcome {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 72%;
+  z-index: 5;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.85s ease;
+  will-change: opacity;
+}
+
+#yn-intro .yn-moon-welcome.is-in {
+  opacity: 1;
+}
+
+#yn-intro .yn-moon-main {
+  font-family: 'STXingkai', 'STXINGKA', '华文行楷', 'STKaiti', 'KaiTi', serif;
+  font-size: clamp(38px, 3.25vw, 58px);
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+  background: linear-gradient(105deg,
+    #8ea7cc 0%, #e9d5ad 13%, #ffffff 28%, #fff8e4 40%,
+    #f0d9a8 54%, #adc9ff 72%, #8fa8d2 87%, #e9d5ad 100%);
+  background-size: 230% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 22px rgba(255, 236, 194, 0.28))
+          drop-shadow(0 0 40px rgba(120, 180, 255, 0.18));
+  animation: yn-welcome-shine 4.6s linear infinite;
+}
+
+@font-face {
+  font-family: 'yn-cinzel';
+  src: url('/dsh-iuno/intro/fonts/Cinzel.ttf') format('truetype');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+#yn-intro .yn-moon-sub {
+  display: block;
+  margin-top: 6px;
+  font-family: 'yn-cinzel', 'Cinzel', 'Trajan Pro', 'Palatino Linotype', Georgia, serif;
+  font-size: clamp(16px, 1.15vw, 24px);
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  color: rgba(232, 218, 188, 0.82);
+}
+
+@keyframes yn-welcome-shine {
+  0% { background-position: 180% 0; }
+  100% { background-position: -80% 0; }
+}
+
+#yn-intro.is-moon-intro .yn-intro-video,
+#yn-intro.is-moon-intro .yn-intro-poster,
+#yn-intro.is-moon-intro .yn-intro-wall,
+#yn-intro.is-moon-intro .yn-intro-tint,
+#yn-intro.is-moon-intro .yn-intro-vignette,
+#yn-intro.is-moon-intro .yn-intro-fx {
+  opacity: 0 !important;
+  transition: opacity 0.6s ease !important;
+}
+
+#yn-intro.is-moon-intro .yn-intro-bar {
+  opacity: 0;
+  pointer-events: none;
+}
